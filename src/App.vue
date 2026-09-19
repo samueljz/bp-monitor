@@ -14,6 +14,7 @@ import type { GlobalThemeOverrides } from 'naive-ui'
 import confetti from 'canvas-confetti'
 import BloodPressureCard from './components/BloodPressureCard.vue'
 import HistoryTab from './components/HistoryTab.vue'
+import ManageTab from './components/ManageTab.vue'
 import { syncData, isSignedIn, isSyncing, syncError, needsReauth, handleAuthClick, handleSignoutClick, initGoogleApi } from './services/driveSync'
 
 // ─── Dark Mode ────────────────────────────────────────────────────────────────
@@ -47,6 +48,7 @@ interface BpReading {
   systolic: number
   diastolic: number
   timestamp: number
+  deleted?: boolean
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -73,7 +75,8 @@ function loadTodayReadings() {
   const key = `bpm_readings_${getTodayDateString()}`
   try {
     const saved = localStorage.getItem(key)
-    readings.value = saved ? JSON.parse(saved) : []
+    const all: BpReading[] = saved ? JSON.parse(saved) : []
+    readings.value = all.filter(r => !r.deleted)
   } catch {
     readings.value = []
   }
@@ -81,7 +84,18 @@ function loadTodayReadings() {
 
 function persistReadings() {
   const key = `bpm_readings_${getTodayDateString()}`
-  localStorage.setItem(key, JSON.stringify(readings.value))
+  try {
+    // Retain deleted entries from localStorage so they aren't lost when saving
+    const saved = localStorage.getItem(key)
+    const all: BpReading[] = saved ? JSON.parse(saved) : []
+    const deletedEntries = all.filter(r => r.deleted)
+    
+    const combined = [...readings.value, ...deletedEntries]
+    combined.sort((a, b) => b.timestamp - a.timestamp)
+    localStorage.setItem(key, JSON.stringify(combined))
+  } catch {
+    localStorage.setItem(key, JSON.stringify(readings.value))
+  }
   syncData()
 }
 
@@ -378,6 +392,13 @@ function handleDropdownSelect(key: string) {
           <n-tab-pane name="history" tab="History">
             <div class="w-full h-full overflow-y-auto no-scrollbar pb-32 transition-colors duration-500">
               <HistoryTab />
+            </div>
+          </n-tab-pane>
+
+          <!-- Manage tab -->
+          <n-tab-pane name="manage" tab="Manage">
+            <div class="w-full h-full overflow-y-auto no-scrollbar pb-32 transition-colors duration-500">
+              <ManageTab />
             </div>
           </n-tab-pane>
 

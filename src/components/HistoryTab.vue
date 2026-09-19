@@ -30,6 +30,7 @@ interface BpReading {
   diastolic: number
   timestamp: number
   dateStr: string
+  deleted?: boolean
 }
 
 const allReadings = ref<BpReading[]>([])
@@ -88,7 +89,9 @@ function loadData() {
     const dateStr = key.replace('bpm_readings_', '')
     try {
       const data: BpReading[] = JSON.parse(localStorage.getItem(key) || '[]')
-      data.forEach(r => readings.push({ ...r, dateStr }))
+      data.forEach(r => {
+        if (!r.deleted) readings.push({ ...r, dateStr })
+      })
     } catch (e) {
       console.error('Error parsing', key)
     }
