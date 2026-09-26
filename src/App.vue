@@ -63,6 +63,8 @@ const formTimeMs = ref<number>(Date.now())
 const formSystolic = ref<number | null>(null)
 const formDiastolic = ref<number | null>(null)
 const formError = ref('')
+// Index of the entry being edited (-1 means a fresh new log)
+const editingIndex = ref(-1)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -193,10 +195,24 @@ function formatTime(timestamp: number): string {
 
 // ─── Modal actions ────────────────────────────────────────────────────────────
 
+/** Open modal for a brand-new reading */
 function openLogModal() {
+  editingIndex.value = -1
   formTimeMs.value = Date.now()
   formSystolic.value = null
   formDiastolic.value = null
+  formError.value = ''
+  showLogModal.value = true
+}
+
+/** Open modal pre-filled with an existing reading for in-place editing */
+function openEditModal(index: number) {
+  const r = readings.value[index]
+  if (!r) return
+  editingIndex.value = index
+  formTimeMs.value = r.timestamp
+  formSystolic.value = r.systolic
+  formDiastolic.value = r.diastolic
   formError.value = ''
   showLogModal.value = true
 }
@@ -223,8 +239,18 @@ function saveLog() {
     timestamp: formTimeMs.value,
   }
 
-  // Prepend so newest reading is first
-  readings.value = [entry, ...readings.value]
+  if (editingIndex.value >= 0) {
+    // Replace the existing entry in-place
+    const updated = [...readings.value]
+    updated[editingIndex.value] = entry
+    // Re-sort newest first
+    updated.sort((a, b) => b.timestamp - a.timestamp)
+    readings.value = updated
+  } else {
+    // Prepend so newest reading is first
+    readings.value = [entry, ...readings.value]
+  }
+
   persistReadings()
   showLogModal.value = false
 
@@ -365,7 +391,7 @@ function handleDropdownSelect(key: string) {
               </template>
 
               <template v-else>
-                <div @click="openLogModal" class="cursor-pointer">
+                <div @click="openEditModal(0)" class="cursor-pointer">
                   <BloodPressureCard
                     :color-class="cardColorClass"
                     :is-active="isCardActive"
@@ -428,7 +454,7 @@ function handleDropdownSelect(key: string) {
       <n-modal v-model:show="showLogModal">
         <n-card
           style="width: 340px; border-radius: 28px;"
-          title="Log Blood Pressure"
+          :title="editingIndex >= 0 ? 'Edit Reading' : 'Log Blood Pressure'"
           :bordered="false"
           size="huge"
           role="dialog"

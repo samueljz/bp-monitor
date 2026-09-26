@@ -213,7 +213,7 @@ function friendlyDate(dateKey: string): string {
       @click="openAddModal"
       class="w-full py-4 rounded-2xl font-extrabold text-white text-sm uppercase tracking-widest shadow-lg active:scale-95 transition-all bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 mb-6"
     >
-      + Add / Backdate Entry
+      + Backdate Entry
     </button>
 
     <!-- Empty state -->
