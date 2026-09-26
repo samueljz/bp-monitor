@@ -337,16 +337,33 @@ function handleDropdownSelect(key: string) {
                 + Log Blood Pressure
               </button>
 
-              <!-- Single BP Card -->
-              <div @click="openLogModal" class="cursor-pointer">
-                <BloodPressureCard
-                  :color-class="cardColorClass"
-                  :is-active="isCardActive"
-                  :systolic="latestReading?.systolic"
-                  :diastolic="latestReading?.diastolic"
-                  :timestamp="latestReading?.timestamp"
-                />
-              </div>
+              <!-- Empty state when no readings; card when there are readings -->
+              <template v-if="readings.length === 0">
+                <div class="flex flex-col items-center justify-center gap-3 py-16 px-4">
+                  <div
+                    class="w-16 h-16 rounded-full flex items-center justify-center"
+                    :class="isDarkMode ? 'bg-slate-800' : 'bg-slate-100'"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" :class="isDarkMode ? 'text-slate-500' : 'text-slate-400'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                  </div>
+                  <p class="text-sm font-semibold" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">No readings today</p>
+                  <p class="text-xs text-center" :class="isDarkMode ? 'text-slate-600' : 'text-slate-400'">Tap the button above to log your first reading for today.</p>
+                </div>
+              </template>
+
+              <template v-else>
+                <div @click="openLogModal" class="cursor-pointer">
+                  <BloodPressureCard
+                    :color-class="cardColorClass"
+                    :is-active="isCardActive"
+                    :systolic="latestReading?.systolic"
+                    :diastolic="latestReading?.diastolic"
+                    :timestamp="latestReading?.timestamp"
+                  />
+                </div>
+              </template>
 
               <!-- Today's readings list (all entries today, below the card) -->
               <div v-if="readings.length > 0" class="flex flex-col gap-2 mt-2">
