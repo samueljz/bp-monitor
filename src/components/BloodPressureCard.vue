@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NCard } from 'naive-ui'
 import { computed } from 'vue'
+import { bpCategory, formatTime } from '../utils/bp'
 
 const props = defineProps<{
   colorClass: string
@@ -12,26 +13,15 @@ const props = defineProps<{
 
 const hasReading = computed(() => !!props.systolic && !!props.diastolic)
 
-const friendlyTime = computed(() => {
-  if (!props.timestamp) return ''
-  const d = new Date(props.timestamp)
-  let h = d.getHours()
-  const m = d.getMinutes().toString().padStart(2, '0')
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  h = h % 12 || 12
-  return `${h}:${m} ${ampm}`
-})
+const friendlyTime = computed(() =>
+  props.timestamp ? formatTime(props.timestamp) : ''
+)
 
-/** Classify BP reading following standard thresholds */
-const bpCategory = computed(() => {
-  if (!props.systolic || !props.diastolic) return null
-  const sys = props.systolic
-  const dia = props.diastolic
-  if (sys < 120 && dia < 80) return { label: 'Normal', color: 'text-emerald-300' }
-  if (sys < 130 && dia < 80) return { label: 'Elevated', color: 'text-yellow-300' }
-  if (sys < 140 || dia < 90) return { label: 'High Stage 1', color: 'text-orange-300' }
-  return { label: 'High Stage 2', color: 'text-red-300' }
-})
+const category = computed(() =>
+  props.systolic && props.diastolic
+    ? bpCategory(props.systolic, props.diastolic)
+    : null
+)
 </script>
 
 <template>
@@ -52,8 +42,8 @@ const bpCategory = computed(() => {
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           {{ friendlyTime }}
         </span>
-        <span v-if="bpCategory" class="mt-1 text-[10px] font-extrabold uppercase tracking-widest" :class="bpCategory.color">
-          {{ bpCategory.label }}
+        <span v-if="category" class="mt-1 text-[10px] font-extrabold uppercase tracking-widest" :class="category.color">
+          {{ category.label }}
         </span>
       </div>
 
