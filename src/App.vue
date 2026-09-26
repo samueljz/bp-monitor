@@ -180,6 +180,17 @@ const latestReading = computed(() => readings.value[0] ?? null)
 // Whether we should show the "Log Now" pulse — always active until the first reading today
 const isCardActive = computed(() => !latestReading.value)
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatTime(timestamp: number): string {
+  const d = new Date(timestamp)
+  let h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
+  const ap = h >= 12 ? 'PM' : 'AM'
+  h = h % 12 || 12
+  return `${h}:${m} ${ap}`
+}
+
 // ─── Modal actions ────────────────────────────────────────────────────────────
 
 function openLogModal() {
@@ -381,16 +392,7 @@ function handleDropdownSelect(key: string) {
                   <div class="flex justify-between items-center px-2 py-0.5">
                     <div class="flex items-center gap-2 text-xs font-semibold" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      {{
-                        (() => {
-                          const d = new Date(r.timestamp)
-                          let h = d.getHours()
-                          const m = String(d.getMinutes()).padStart(2, '0')
-                          const ap = h >= 12 ? 'PM' : 'AM'
-                          h = h % 12 || 12
-                          return `${h}:${m} ${ap}`
-                        })()
-                      }}
+                      {{ formatTime(r.timestamp) }}
                     </div>
                     <div class="flex items-end gap-1">
                       <span class="text-xl font-black tabular-nums" :class="isDarkMode ? 'text-slate-100' : 'text-slate-800'">{{ r.systolic }}</span>
